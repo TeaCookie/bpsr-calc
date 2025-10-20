@@ -1,0 +1,6 @@
+"id","price","focusCost","recipe","yield"
+"burning powder",100,20,,"15"
+"baru ore",104,20,,"11"
+"rich baru ore",154,20,,"11"
+"mystery metal",2100,10,"[{""materialId"":""baru ore"",""quantity"":8},{""materialId"":""burning powder"",""quantity"":1}]","[{""chance"":0.76,""quantity"":1},{""chance"":0.23,""quantity"":2},{""chance"":0.01,""quantity"":3}]"
+"mystery metal 1",2100,10,"[{""materialId"":""rich baru ore"",""quantity"":8},{""materialId"":""burning powder"",""quantity"":1}]","[{""chance"":0.50,""quantity"":1},{""chance"":0.25,""quantity"":2},{""chance"":0.25,""quantity"":3}]"
