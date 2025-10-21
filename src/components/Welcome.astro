@@ -1,17 +1,20 @@
 ---
-import astroLogo from '../assets/astro.svg';
 import background from '../assets/background.svg';
-import ClientSortableTable from './priceTable';
-import { getAllMaterials } from '../utils/materials';
+import MainTableShell from '../utils/mainTableShell.tsx';
+import { getAllMaterials } from '../utils/materialController';
 
 const initialRecipes = await getAllMaterials();
 ---
+<!-- <div>SERVER initialRecipes.length: {initialRecipes?.length ?? 0}</div> -->
 
 <div id="container">
 	<img id="background" src={background.src} alt="" fetchpriority="high" />
 	<main>
 		<section id="hero">
-			<ClientSortableTable initialRecipes={initialRecipes} client:load />
+			<!-- <MainTableProvider client:load initialData={initialRecipes}>
+        <MainTable />
+      </MainTableProvider> -->
+      <MainTableShell client:load initialData={initialRecipes} />
 		</section>
 	</main>
 </div>
