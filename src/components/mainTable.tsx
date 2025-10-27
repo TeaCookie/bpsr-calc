@@ -18,7 +18,7 @@ const mainTableColumns = [
   columnHelper.group({
     header: "Info",
     columns: [
-      columnHelper.accessor('id', { 
+      columnHelper.accessor('id', {
         header: 'Name',
         cell: ({ row, getValue }) => {
           // Display value ONLY for parent rows (depth 0)
@@ -37,20 +37,33 @@ const mainTableColumns = [
 
   // --- MATERIALS GROUP ---
   columnHelper.group({
-    header: "Materials",
+    id: 'materials',
+    header: 'Materials',
     columns: [
+      // 1. Material Name Column
       columnHelper.accessor('materialId', {
         id: 'materialId',
         header: 'Name',
         cell: ({ row, getValue }) => {
-          return row.original.isMaterial ? getValue() : null;
+          // RENDER: Always show, UNLESS it's a sub-row that doesn't carry this data.
+          // Since the normalized data only populates materialName/quantity on the parent 
+          // and the subsequent sub-rows, this will render correctly for all material-bearing rows.
+          if (row.depth === 0 || row.original.isMaterial) {
+            return <div className={row.depth === 0 ? '' : styles.materialCellText}>{getValue()}</div>;
+          }
+          return null;
         },
       }),
+
+      // 2. Material Quantity Column
       columnHelper.accessor('quantity', {
-        id: 'quantity', 
+        id: 'quantity',
         header: 'Quantity',
         cell: ({ row, getValue }) => {
-          return row.original.isMaterial ? getValue() : null;
+          if (row.depth === 0 || row.original.isMaterial) {
+            return getValue();
+          }
+          return null;
         },
       }),
       // 3. Focus Cost (Accessor targets the 'focusCost' property on RecipeItem)
@@ -67,27 +80,30 @@ const mainTableColumns = [
   columnHelper.group({
     header: "Output",
     columns: [
-        columnHelper.display({
-            id: 'output-placeholder',
-            header: 'N/A',
-            cell: () => <div className="text-gray-400">-</div>,
-        }),
+      columnHelper.accessor('profitPerFocus', {
+        header: 'Profit/Focus',
+        cell: ({ row, getValue }) => {
+          // Display value ONLY for parent rows (depth 0)
+          return row.depth === 0 ? <div className="font-mono">${getValue()?.toFixed(2)}</div> : null;
+        },
+      }),
     ],
   }),
 ];
 
 export default function MainTable() {
-  // console.log('[MainTable] React.version (consumer):', (React as any).version);
   const ctx = React.useContext(MainTableContext);
-  // console.log('[MainTable] context at render (full):', ctx);
-  // console.log('[MainTable] context at render:', { tableDataLen: ctx.tableData?.length, isLoading: ctx.isLoading });
 
-  const { tableData, isLoading } = ctx;
-  
+  if (!ctx) {
+    return <div>Loading...</div>;
+  }
+
+  const { tableData, isLoading, focusPrice } = ctx;
+
   // const { tableData, isLoading } = useContext(MainTableContext);
   const [expanded] = useState(true);
-  
-  if (isLoading){
+
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
@@ -98,19 +114,23 @@ export default function MainTable() {
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
 
-    state: { expanded: true},
-    onExpandedChange: () => {},
+    state: { expanded: true },
+    onExpandedChange: () => { },
     autoResetExpanded: false,
   });
 
   return (
-    <div>
-      <table>
+    <div className={styles.tableContainer}>
+      <table className={styles.mainTable}>
 
         {/* --- Table Header (Grouped Headers) --- */}
         <thead>
-          {table.getHeaderGroups().map(headerGroup => (
-            <tr key={headerGroup.id}>
+          {table.getHeaderGroups().map((headerGroup, index) => (
+            <tr
+              key={headerGroup.id}
+              // Apply class based on header tier
+              className={index === 0 ? styles.headerGroupRow : styles.columnHeaderRow}
+            >
               {headerGroup.headers.map(header => (
                 <th
                   key={header.id}
@@ -127,19 +147,57 @@ export default function MainTable() {
 
         {/* --- Table Body --- */}
         <tbody>
-          {table.getRowModel().rows.map(row => {
+          {table.getRowModel().rows.map((row, index, rowsArray) => {
+            const isParent = row.depth === 0;
+
+            // --- NEW LOGIC: Determine if this is the last row in a recipe group ---
+            const nextRow = rowsArray[index + 1];
+
+            // The row is the last in its group if:
+            // 1. It is the very last row in the entire table (no nextRow), OR
+            // 2. The next row in the array belongs to a different top-level parent.
+            const isLastGroupRow =
+              !nextRow ||
+              (nextRow.depth === 0);
+
+            // --- End NEW LOGIC ---
+            let rowClassName = styles.dataRow;
+            if (isLastGroupRow) {
+              rowClassName += ` ${styles.isLastGroupRow}`;
+            }
+
             return (
               <tr
                 key={row.id}
+                className={rowClassName}
               >
-                {row.getVisibleCells().map(cell => (
-                  <td
-                    key={cell.id}
-                  >
-                    {/* Render the content from the custom column definitions */}
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+                {row.getVisibleCells().map(cell => {
+                  let cellClassName = styles.tableCell;
+
+                  // 4. Apply column/content-specific styling for alignment/indentation
+                  if (cell.column.id === 'name') {
+                    cellClassName += ` ${styles.nameCell}`;
+                  }
+                  if (cell.column.id === 'materialName' && row.original.isMaterial) {
+                    cellClassName += ` ${styles.materialNameCell}`;
+                  }
+                  if (cell.column.id === 'focusCost') {
+                    cellClassName += ` ${styles.focusCostCell}`;
+                  }
+
+                  if (row.original.method) {
+                    if (row.original.method === 'buy') {
+                      cellClassName += ` ${styles.buyCell}`;
+                    } else if (row.original.method === 'craft') {
+                      cellClassName += ` ${styles.craftCell}`;
+                    }
+                  }
+                  return (
+                    <td key={cell.id} className={cellClassName}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
               </tr>
             )
           })}
@@ -147,13 +205,14 @@ export default function MainTable() {
       </table>
 
       {/* --- DEBUG: inspect data supplied to the table --- */}
-      {/* <div style={{marginTop:16, whiteSpace:'pre-wrap', fontSize:12}}>
-        <strong>DEBUG: tableData</strong>
-        <pre>{JSON.stringify(tableData, null, 2)}</pre>
+      <div style={{marginTop:16, whiteSpace:'pre-wrap', fontSize:12}}>
+        {/* <strong>DEBUG: tableData</strong>
+        <pre>{JSON.stringify(tableData.slice(0), null, 2)}</pre>
 
         <strong>DEBUG: row model (originals)</strong>
-        <pre>{JSON.stringify(table.getRowModel().rows.map(r => ({ id: r.id, depth: r.depth, original: r.original })), null, 2)}</pre>
-      </div> */}
+        <pre>{JSON.stringify(table.getRowModel().rows.map(r => ({ id: r.id, depth: r.depth, original: r.original })), null, 2)}</pre> */}
+        <strong>Focus Price:</strong> {focusPrice !== null ? `$${focusPrice.toFixed(2)}` : 'N/A'}
+      </div>
     </div>
   );
 }

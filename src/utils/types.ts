@@ -14,4 +14,6 @@ export interface RecipeItem extends Material {
   isMaterial?: boolean;
   materialId?: string;
   quantity?: number;
+  profitPerFocus?: number;
+  method?: "buy" | "craft" | "error";
 }

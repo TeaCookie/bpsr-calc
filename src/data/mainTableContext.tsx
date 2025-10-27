@@ -1,7 +1,8 @@
-
-import { createContext, useState, useEffect, useMemo, useCallback } from "react";
+import { createContext, useState, useEffect, useMemo, useCallback, useContext } from "react";
 import type { Material, RecipeItem } from "../utils/types";
 import { getAllMaterials } from "../utils/materialController";
+import { normalizeData, buildMaterialMap, findFocusEquilibrium } from "../utils/dataCalcs";
+import type { ComputedRecipeInfo } from "../utils/dataCalcs";
 
 interface MainTableProviderProps {
   children: React.ReactNode;
@@ -12,56 +13,20 @@ interface MainTableContextValue {
   tableData: RecipeItem[];
   isLoading: boolean;
   refreshData: () => Promise<void>;
+  updatePrice: (id: string, newPrice: number) => void;
+  materialsById: Map<string, Material>;
+  focusPrice: number | null;
+  focusCache?: Map<string, ComputedRecipeInfo>;
 }
 
-export const MainTableContext = createContext<MainTableContextValue>({
-  tableData: [],
-  isLoading: false,
-  refreshData: async () => { }
-});
-
-const normalizeData = (rawMaterials: Material[]): RecipeItem[] => {
-  return rawMaterials.map(item => {
-    const parentItem: RecipeItem = {
-      ...item,
-      name: item.id,
-      isMaterial: false,
-      // Ensure yield is handled if needed
-      yield: item.yield
-    } as RecipeItem;
-
-    if (item.recipe) {
-      parentItem.subRows = item.recipe.map(material => ({
-        id: `${item.id}-${material.materialId}`,
-        price: item.price,
-        focusCost: item.focusCost,
-
-        isMaterial: true,
-        materialId: material.materialId,
-        quantity: material.quantity,
-
-        recipe: undefined,
-        yield: 0,
-        name: item.id
-      })) as RecipeItem[];
-    }
-
-    return parentItem;
-  });
-};
+export const MainTableContext = createContext<MainTableContextValue | null>(null);
 
 export const MainTableProvider = ({ children, initialData = [] }: MainTableProviderProps) => {
   const [rawData, setRawData] = useState<Material[]>(() => initialData);
   const [isLoading, setIsLoading] = useState<boolean>(initialData.length === 0);
 
-  // run-on-every-render log to show client runtime values
-  // (use browser console after client:load hydration)
-  // console.log('[MainTableProvider] render (client?)', {
-  //   initialDataLen: initialData?.length,
-  //   rawDataLen: rawData?.length,
-  //   isLoading
-  // });
-
+  const [focusPrice, setFocusPrice] = useState<number | null>(null);
+  const [focusCache, setFocusCache] = useState<Map<string, ComputedRecipeInfo>>(new Map());
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -72,36 +37,55 @@ export const MainTableProvider = ({ children, initialData = [] }: MainTableProvi
 
   useEffect(() => {
     if (initialData.length === 0) {
-      // Case 1: No data provided, must fetch.
       fetchData();
     } else {
-      // Case 2: Data was provided. Update the state to reflect the latest prop value.
+      // accept updates to the prop if server provides new data
       setRawData(initialData);
       setIsLoading(false);
     }
-    console.log('[MainTableProvider] initialData length:', initialData?.length);
-    console.log('[MainTableProvider] rawData length:', rawData?.length);
   }, [fetchData, initialData]);
 
-  const tableData = useMemo(() => normalizeData(rawData), [rawData]);
-  //   // debug: show the normalized data that will be provided to consumers
-  // useEffect(() => {
-  //   console.log('[MainTableProvider] tableData length (normalized):', tableData?.length);
-  //   // optionally show a sample:
-  //   console.log('[MainTableProvider] tableData sample:', tableData?.slice(0,3));
-  // }, [tableData]);
+  // use pure helpers from utils and memoize results
+  const tableData = useMemo(() => normalizeData(rawData, focusCache), [rawData, focusCache]);
+  const materialsById = useMemo(() => buildMaterialMap(rawData), [rawData]);
+
+  useEffect(() => {
+    if (!materialsById.size) return;
+
+    // Compute equilibrium (you’ll plug in your function here)
+    const { focusEquilibrium: newFocusPrice, cache: newFocusCache } = findFocusEquilibrium(materialsById);
+
+    setFocusPrice(newFocusPrice);
+    setFocusCache(newFocusCache);
+
+  }, [materialsById]);
+
+
+  const updatePrice = useCallback((id: string, newPrice: number) => {
+    setRawData(prev => prev.map(m => m.id === id ? { ...m, price: newPrice } : m));
+  }, []);
 
   const value = useMemo(() => ({
     tableData,
     isLoading,
-    refreshData: fetchData
-  }), [tableData, isLoading, fetchData]);
+    refreshData: fetchData,
+    updatePrice,
+    materialsById,
+    focusPrice,
+    focusCache,
+  }), [tableData, isLoading, fetchData, updatePrice, materialsById, focusPrice, focusCache]);
+
 
   return (
     <MainTableContext.Provider value={value}>
       {children}
     </MainTableContext.Provider>
   );
+};
 
-
+/** safe hook for consumers */
+export function useMainTable() {
+  const ctx = useContext(MainTableContext);
+  if (!ctx) throw new Error("useMainTable must be used within MainTableProvider");
+  return ctx;
 }

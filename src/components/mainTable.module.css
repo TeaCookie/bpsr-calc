@@ -1,0 +1,108 @@
+/* src/components/MainTable.module.css */
+
+/* --- Overall Table Structure --- */
+.tableContainer {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  overflow: hidden; 
+}
+
+.mainTable {
+  width: 100%;
+  border-collapse: separate; /* Ensures borders align nicely */
+  border-spacing: 0; /* Remove default spacing */
+}
+
+/* --- Header Styling (Adding Vertical Lines) --- */
+
+.headerGroupRow {
+  background-color: #e0f2fe;
+}
+
+.headerGroupRow th {
+  padding: 12px 16px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0c4a6e;
+  /* 1. Add vertical line to separate columns */
+  border-right: 1px solid #bae6fd; 
+}
+
+.columnHeaderRow th:last-child, 
+.headerGroupRow th:last-child {
+  border-right: none; /* Remove right border from the last header cell */
+}
+
+.columnHeaderRow th {
+  background-color: #f0f9ff;
+  padding: 8px 16px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #4b5563;
+  /* 1. Add vertical line to separate columns */
+  border-right: 1px solid #dbeafe; 
+}
+
+.columnHeaderRow th:last-child {
+  border-right: none;
+}
+
+/* --- Row & Cell Styling --- */
+
+/* Base cell style includes the vertical divider */
+.tableCell {
+  padding: 8px 16px;
+  text-align: center;
+  vertical-align: top;
+  border-right: 1px solid #e5e7eb; /* 1. Add vertical line to separate cells */
+  /* 2. REMOVE the standard horizontal line */
+  border-bottom: none; 
+}
+
+.tableCell:last-child {
+  border-right: none; /* Remove right border from the last cell in the row */
+}
+
+/* --- Group Separator Logic (The Single Horizontal Line) --- */
+
+.dataRow {
+  background-color: #ffffff; /* Uniform white background */
+  color: #1f2937; /* Uniform text color */
+  font-size: 0.875rem; /* Uniform font size */
+}
+
+/* 3b. Apply the horizontal divider to the LAST row of each group */
+/* This targets the <td> elements within the last visible row of the group. */
+/* The :last-of-type selector targets the last row of the group. */
+.dataRow.isLastGroupRow td {
+    border-bottom: 2px solid #e5e7eb; /* Thick blue separator */
+}
+
+/* --- Specific Cell Styles --- */
+.nameCell {
+    text-align: left;
+}
+
+.materialNameCell {
+  padding-left: 30px; 
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
+.focusCostCell {
+    font-family: monospace;
+    color: #8b5cf6;
+}
+
+.buyCell {
+  background-color: rgba(0, 200, 100, 0.1); /* soft green tint */
+}
+
+.craftCell {
+  background-color: rgba(100, 150, 255, 0.15); /* soft blue tint */
+}
+
+.errorCell {
+  background-color: rgba(255, 100, 100, 0.2); /* soft red tint */
+} 
