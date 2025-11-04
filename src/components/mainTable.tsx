@@ -1,4 +1,4 @@
-import type { RecipeItem } from "../utils/types";
+import type { MaterialDisplay, RecipeItem } from "../utils/types";
 import { useState } from "react";
 import * as React from 'react'
 import {
@@ -8,10 +8,16 @@ import {
   useReactTable,
   getExpandedRowModel,
 } from '@tanstack/react-table'
+import type { Row, ColumnMeta } from '@tanstack/react-table';
 import { MainTableContext } from "../data/mainTableContext";
 import styles from './mainTable.module.css';
 
-const columnHelper = createColumnHelper<RecipeItem>();
+declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData, TValue> {
+    tdClassName?: (args: { row: Row<TData> }) => string;
+  }
+}
+const columnHelper = createColumnHelper<MaterialDisplay>();
 
 const mainTableColumns = [
   // --- INFO GROUP ---
@@ -19,6 +25,7 @@ const mainTableColumns = [
     header: "Info",
     columns: [
       columnHelper.accessor('id', {
+        id: 'mainId',
         header: 'Name',
         cell: ({ row, getValue }) => {
           // Display value ONLY for parent rows (depth 0)
@@ -26,10 +33,19 @@ const mainTableColumns = [
         },
       }),
       columnHelper.accessor('price', {
+        id: 'mainPrice',
         header: 'Price',
         cell: (info) => {
           // Display value ONLY for parent rows (depth 0)
           return info.row.depth === 0 ? `$${info.getValue()}` : null;
+        },
+      }),
+      columnHelper.accessor('focusCost', {
+        id: 'mainFocusCost',
+        header: 'Focus Cost',
+        cell: ({ row, getValue }) => {
+          // Display value ONLY for parent rows (depth 0)
+          return row.depth === 0 ? <div className="font-semibold">{getValue()}</div> : null;
         },
       }),
     ],
@@ -44,6 +60,18 @@ const mainTableColumns = [
       columnHelper.accessor('materialId', {
         id: 'materialId',
         header: 'Name',
+        meta: {
+          // This function is called for every cell in this column
+          tdClassName: ({ row }) => {
+            let className = '';
+
+            if (row.depth === 0 || row.original.isMaterial) {
+              className += ` ${row.original.method}`;
+            }
+
+            return className.trim();
+          },
+        },
         cell: ({ row, getValue }) => {
           // RENDER: Always show, UNLESS it's a sub-row that doesn't carry this data.
           // Since the normalized data only populates materialName/quantity on the parent 
@@ -66,13 +94,37 @@ const mainTableColumns = [
           return null;
         },
       }),
-      // 3. Focus Cost (Accessor targets the 'focusCost' property on RecipeItem)
-      columnHelper.accessor('focusCost', {
-        header: 'Focus',
-        cell: ({ row, getValue }) => {
-          // Display value ONLY for parent rows (depth 0)
-          return row.depth === 0 ? <div className="font-mono">{getValue()}</div> : null;
+      
+      columnHelper.accessor('ingredientCost', {
+        id: 'materialPrice',
+        header: 'Price',
+        meta: {
+          tdClassName: ({ row }) => {
+            return (row.original.method == 'buy') ? row.original.method : ''
+          },
         },
+        cell: ({ row, getValue }) => {
+          if (row.depth === 0 || row.original.isMaterial) {
+            return `$${getValue()?.toFixed(0)}`;
+          }
+          return null;
+        }
+      }),
+
+      columnHelper.accessor('totalFocusCost', {
+        id: 'materialFocusCost',
+        header: 'Focus',
+        meta: {
+          tdClassName: ({ row }) => {
+            return (row.original.method == 'craft') ? row.original.method : ''
+          },
+        },
+        cell: ({ row, getValue }) => {
+          if (row.depth === 0 || row.original.isMaterial) {
+            return getValue()?.toFixed(2);
+          }
+          return null;
+        }
       }),
     ],
   }),
@@ -172,25 +224,30 @@ export default function MainTable() {
                 className={rowClassName}
               >
                 {row.getVisibleCells().map(cell => {
+                  // 1. Start with the base style class
                   let cellClassName = styles.tableCell;
 
-                  // 4. Apply column/content-specific styling for alignment/indentation
-                  if (cell.column.id === 'name') {
-                    cellClassName += ` ${styles.nameCell}`;
-                  }
-                  if (cell.column.id === 'materialName' && row.original.isMaterial) {
-                    cellClassName += ` ${styles.materialNameCell}`;
-                  }
-                  if (cell.column.id === 'focusCost') {
-                    cellClassName += ` ${styles.focusCostCell}`;
+                  // If in materials group, add specific class
+                  if (cell.column.id === 'quantity' || cell.column.id === 'ingredientCost' || cell.column.id === 'focusCost') {
+                    cellClassName += ` ${styles.materialsGroupNumber}`;
                   }
 
-                  if (row.original.method) {
-                    if (row.original.method === 'buy') {
-                      cellClassName += ` ${styles.buyCell}`;
-                    } else if (row.original.method === 'craft') {
-                      cellClassName += ` ${styles.craftCell}`;
-                    }
+                  // 3. ⚠️ CRITICAL: Retrieve the dynamic class from the column's meta
+                  const metaClassFn = cell.column.columnDef.meta?.tdClassName;
+                  if (metaClassFn) {
+
+                    // Execute the function defined in the column meta
+                    const dynamicClassString = metaClassFn({ row: cell.row });
+                    // console.log('Dynamic Class String:', dynamicClassString);
+
+                    // ⚠️ CRITICAL FIX: Split the string and look up EACH class name in the CSS Module object
+                    dynamicClassString.split(' ').forEach(className => {
+                      // Ensure the class name is not empty AND it exists in the styles object
+                      if (className && styles[className]) {
+                        // Append the unique, scoped CSS Module name to the cellClassName
+                        cellClassName += ` ${styles[className]}`;
+                      }
+                    });
                   }
                   return (
                     <td key={cell.id} className={cellClassName}>
@@ -205,7 +262,7 @@ export default function MainTable() {
       </table>
 
       {/* --- DEBUG: inspect data supplied to the table --- */}
-      <div style={{marginTop:16, whiteSpace:'pre-wrap', fontSize:12}}>
+      <div style={{ marginTop: 16, whiteSpace: 'pre-wrap', fontSize: 12 }}>
         {/* <strong>DEBUG: tableData</strong>
         <pre>{JSON.stringify(tableData.slice(0), null, 2)}</pre>
 

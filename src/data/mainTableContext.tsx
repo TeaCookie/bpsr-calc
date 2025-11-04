@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useMemo, useCallback, useContext } from "react";
-import type { Material, RecipeItem } from "../utils/types";
+import type { Material, MaterialDisplay, RecipeItem } from "../utils/types";
 import { getAllMaterials } from "../utils/materialController";
 import { normalizeData, buildMaterialMap, findFocusEquilibrium } from "../utils/dataCalcs";
 import type { ComputedRecipeInfo } from "../utils/dataCalcs";
@@ -10,7 +10,7 @@ interface MainTableProviderProps {
 }
 
 interface MainTableContextValue {
-  tableData: RecipeItem[];
+  tableData: MaterialDisplay[];
   isLoading: boolean;
   refreshData: () => Promise<void>;
   updatePrice: (id: string, newPrice: number) => void;

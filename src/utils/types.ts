@@ -15,5 +15,23 @@ export interface RecipeItem extends Material {
   materialId?: string;
   quantity?: number;
   profitPerFocus?: number;
-  method?: "buy" | "craft" | "error";
+  method: "buy" | "craft" | "error" | "sum";
+  ingredientCost: number;
+}
+
+export interface MaterialDisplay {
+  id: string;
+  price?: number;
+  focusCost?: number;
+  // Materials group
+  subRows?: MaterialDisplay[];
+  materialId?: string;
+  quantity?: number;
+  method: "buy" | "craft" | "error" | "sum";
+  ingredientCost: number;
+  totalFocusCost: number;
+  // Output group
+  profitPerFocus?: number;
+  // Conditional formatting
+  isMaterial: boolean;
 }
