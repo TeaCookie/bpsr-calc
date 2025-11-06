@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useMainTable } from '../data/mainTableContext'; // Adjust path
-import styles from './MarketPriceEditor.module.css'; // We'll create this file
+import styles from './marketPriceEditor.module.css'; // We'll create this file
 
 export default function MarketPriceEditor() {
   const { materialsById, updatePrice } = useMainTable();
