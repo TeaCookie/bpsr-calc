@@ -160,8 +160,9 @@ export function findFocusEquilibrium(
   // Iteration variables
   let currentFocusPrice = 0;
   let iteration = 0;
-  let maxIterations = 50;
+  let maxIterations = 100000;
   let tolerance = 0.001;
+  let dampingFactor = 0.7
 
   let convergedCostCache: Map<string, ComputedRecipeInfo> | null = null;
 
@@ -196,7 +197,8 @@ export function findFocusEquilibrium(
       break;
     }
     // Update our guess and loop again
-    currentFocusPrice = maxPPF;
+    const delta = maxPPF - currentFocusPrice;
+        currentFocusPrice = currentFocusPrice + dampingFactor * delta;
     iteration++;
   }
   if (!convergedCostCache) {
