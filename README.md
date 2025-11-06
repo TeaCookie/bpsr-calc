@@ -1,46 +1,59 @@
-# Astro Starter Kit: Basics
+## About
+BPSR-calc is a profit analysis tool for the renown mmo [Blue Protocol: Star Resonance](https://www.playbpsr.com/). It features a Jacobi iterative solver with dampening to find the opportunity cost of spending the time limited in game resource Focus. 
 
-```sh
-npm create astro@latest -- --template basics
-```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+### WIP 
+#### Features planned
+- General UI update
+- Tutorial
+- About section
+- Table operation features
+- Auth for admins and planned seeders
+- Updated admin panel for CRUD operations on materials
+- Computer vision scan of in game UI for prices (far future)
 
-## 🚀 Project Structure
+---
 
-Inside of your Astro project, you'll see the following folders and files:
+## 🧰 Tech Stack
+- **Framework:** [Astro](https://astro.build/)
+- **UI Library:** [React](https://react.dev/)
+- **Table Management:** [TanStack Table](https://tanstack.com/table)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Validation:** [Zod](https://zod.dev/)
+- **Backend:** [Supabase](https://supabase.com/)
+- **Deployment:** [Vercel](https://vercel.com/)
+- **Server Functions:** [Astro Actions](https://docs.astro.build/en/guides/actions/)
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
-```
+---
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## 🤝 Contributing
 
-## 🧞 Commands
+Contributions are welcome!  
+Feel free to open issues or submit pull requests for:
 
-All commands are run from the root of the project, from a terminal:
+-   Bug fixes
+    
+-   New features
+    
+-   Performance improvements
+    
+-   Documentation updates
+    
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+Please ensure your changes follow existing code style and pass type checks before submitting.
 
-## 👀 Want to learn more?
+----------
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## 📄 License
+
+This project is licensed under the  
+**[Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/)** license.
+
+You are free to share and adapt this project for non-commercial use with proper attribution.
+
+----------
+
+## 🌐 Hosted Version
+
+You can access the live version of **BPSR-calc** here:  
+➡️ https://bpsr-calc.vercel.app/
