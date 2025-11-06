@@ -1,0 +1,119 @@
+/* src/components/MarketPriceEditor.module.css (REVISED) */
+
+/* --- Main Container & Header --- */
+.editorContainer {
+  /* Soft background, defined border */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff; /* White background */
+  border: 1px solid #e5e7eb; /* Light border (similar to table dividers) */
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.searchWrapper {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb; /* Light header background, matching table header */
+}
+
+.searchInput {
+  /* width: 100%; */
+  padding: 0.6rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.9rem;
+  /* Match table input focus color (assuming a primary green/teal) */
+  transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #10b981; /* Primary Green/Teal */
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+/* --- Table Styles --- */
+.tableWrapper {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.priceTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.priceTable th {
+  /* Match table header style */
+  background-color: #f9fafb; 
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #4b5563; /* Dark gray text */
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky; 
+  top: 0;
+  z-index: 1;
+}
+
+.priceTable td {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #f3f4f6; /* Very light row divider */
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.priceTable tr:hover {
+  background-color: #f7f9fc; /* Subtle hover effect */
+}
+
+.priceInput {
+  width: 80%;
+  padding: 0.25rem 0.5rem;
+  /* Use lighter, less intrusive border */
+  border: 1px solid #e5e7eb; 
+  border-radius: 0.25rem;
+  text-align: right;
+  font-size: 0.875rem;
+  background-color: #ffffff; /* Ensure input background is white */
+}
+
+.priceInput:focus {
+  outline: none;
+  border-color: #10b981; /* Primary Green/Teal focus */
+  box-shadow: 0 0 0 1px #10b981;
+}
+
+/* --- Bottom Bar & Button --- */
+.bottomBar {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb; /* Light background for the bar */
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.02);
+}
+
+.commitButton {
+  width: 100%;
+  padding: 0.75rem;
+  font-weight: 600;
+  color: white;
+  background-color: #10b981; /* Primary Action Color (Green/Teal) */
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.commitButton:hover {
+  background-color: #059669; /* Darker shade on hover */
+}
+
+.commitButton:disabled {
+  background-color: #d1d5db; /* Lighter gray for disabled state */
+  color: #f3f4f6;
+  cursor: not-allowed;
+}
