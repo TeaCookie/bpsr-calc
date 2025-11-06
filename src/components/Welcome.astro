@@ -10,10 +10,10 @@ const initialRecipes = await getAllMaterials();
 <div id="container">
   <img id="background" src={background.src} alt="" fetchpriority="high" />
   <main>
-    <!-- <div class="dashboard-layout">
+    <div class="dashboard-layout">
       <MainTableShell client:load initialData={initialRecipes} />
-    </div> -->
-    <AdminForm/>
+    </div>
+    <!-- <AdminForm client:load/> -->
   </main>
 
   <style>

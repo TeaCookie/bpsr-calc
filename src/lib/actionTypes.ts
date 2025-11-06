@@ -5,7 +5,7 @@ const RecipeIngredientSchema = z.object({
   quantity: z.number().int().min(1, { message: "Quantity must be at least 1." }),
 });
 
-const YieldValues = z.object({
+export const YieldValues = z.object({
   chance: z.number().positive().max(1),
   quantity: z.number().positive()
 })
@@ -14,7 +14,7 @@ export const MaterialSchema = z.object({
   id: z.string(),
   price: z.number().positive(),
   recipe: z.array(RecipeIngredientSchema).optional(),
-  yield: z.union([z.number(), z.array(YieldValues)]),
+  yield: z.union([z.number(), z.array(YieldValues)]).optional(),
   focusCost: z.number().positive(),
 });
 
