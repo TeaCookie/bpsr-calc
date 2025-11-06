@@ -1,0 +1,174 @@
+/* src/components/AdminForm.module.css */
+
+.formContainer {
+  /* Mimic: space-y-6 p-6 bg-white shadow rounded-lg */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* space-y-6 */
+  padding: 1.5rem; /* p-6 */
+  background-color: #fff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem; /* rounded-lg */
+}
+
+.formTitle {
+  /* Mimic: text-2xl font-bold border-b pb-2 */
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 700; /* font-bold */
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.5rem; /* pb-2 */
+}
+
+.coreFieldsGrid {
+  /* Mimic: grid grid-cols-3 gap-6 */
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem; /* gap-6 */
+}
+
+.label {
+  /* Mimic: block text-sm font-medium text-gray-700 */
+  display: block;
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  color: #374151; /* text-gray-700 */
+  margin-bottom: 0.25rem;
+}
+
+.inputField {
+  /* Mimic: mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 */
+  margin-top: 0.25rem; /* mt-1 */
+  display: block;
+  width: 100%;
+  border: 1px solid #d1d5db; /* border-gray-300 */
+  border-radius: 0.375rem; /* rounded-md */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  padding: 0.5rem; /* p-2 */
+}
+
+.errorText {
+  /* Mimic: text-red-500 text-xs mt-1 */
+  color: #ef4444; /* text-red-500 */
+  font-size: 0.75rem; /* text-xs */
+  margin-top: 0.25rem; /* mt-1 */
+}
+
+/* --- Recipe List Styles --- */
+
+.sectionTitle {
+  /* Mimic: text-xl font-semibold mt-4 */
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 600; /* font-semibold */
+  margin-top: 1rem; /* mt-4 */
+}
+
+.recipeList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* space-y-3 */
+}
+
+.recipeRow {
+  /* Mimic: flex space-x-4 items-end bg-gray-50 p-3 rounded-md */
+  display: flex;
+  gap: 1rem; /* space-x-4 */
+  align-items: flex-end; /* items-end */
+  background-color: #f9fafb; /* bg-gray-50 */
+  padding: 0.75rem; /* p-3 */
+  border-radius: 0.375rem; /* rounded-md */
+}
+
+.recipeInputContainer {
+  flex: 1; /* flex-1 */
+}
+
+.recipeQuantityContainer {
+  width: 25%; /* w-1/4 */
+}
+
+.recipeLabel {
+  /* Mimic: block text-xs font-medium text-gray-500 */
+  display: block;
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 500;
+  color: #6b7280; /* text-gray-500 */
+  margin-bottom: 0.25rem;
+}
+
+.recipeInputField {
+  /* Same as .inputField, but smaller text */
+  display: block;
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  padding: 0.5rem;
+  font-size: 0.875rem; /* text-sm */
+}
+
+.removeButton {
+  /* Mimic: p-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 h-10 */
+  padding: 0.5rem; /* p-2 */
+  font-size: 0.875rem; /* text-sm */
+  background-color: #ef4444; /* bg-red-500 */
+  color: white;
+  border-radius: 0.375rem; /* rounded-md */
+  transition: background-color 0.15s;
+  height: 2.5rem; /* h-10 */
+  flex-shrink: 0;
+}
+
+.removeButton:hover {
+  background-color: #dc2626; /* hover:bg-red-600 */
+}
+
+.addButton {
+  /* Mimic: p-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 */
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  background-color: #3b82f6; /* bg-blue-500 */
+  color: white;
+  border-radius: 0.375rem;
+  transition: background-color 0.15s;
+  align-self: flex-start;
+}
+
+.addButton:hover {
+  background-color: #2563eb; /* hover:bg-blue-600 */
+}
+
+/* --- Submit Button Styles --- */
+
+.submitSection {
+  /* Mimic: pt-4 border-t */
+  padding-top: 1rem; /* pt-4 */
+  border-top: 1px solid #e5e7eb;
+}
+
+.submitButton {
+  /* Mimic: px-4 py-2 text-white font-semibold rounded-md shadow-md bg-green-600 hover:bg-green-700 */
+  padding: 0.5rem 1rem;
+  color: white;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  background-color: #16a34a; /* bg-green-600 */
+  transition: background-color 0.15s;
+  width: 100%;
+}
+
+.submitButton:hover {
+  background-color: #15803d; /* hover:bg-green-700 */
+}
+
+.submitButtonLoading {
+  /* Mimic: bg-gray-400 cursor-not-allowed */
+  padding: 0.5rem 1rem;
+  color: white;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  background-color: #9ca3af; /* bg-gray-400 */
+  cursor: not-allowed;
+  width: 100%;
+}

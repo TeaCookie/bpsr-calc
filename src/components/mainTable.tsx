@@ -1,12 +1,12 @@
 import type { MaterialDisplay, RecipeItem } from "../utils/types";
-import { useState } from "react";
-import * as React from 'react'
+import { useState, useContext } from "react";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
   getExpandedRowModel,
+  getSortedRowModel,
 } from '@tanstack/react-table'
 import type { Row, ColumnMeta } from '@tanstack/react-table';
 import { MainTableContext } from "../data/mainTableContext";
@@ -22,11 +22,14 @@ const columnHelper = createColumnHelper<MaterialDisplay>();
 const mainTableColumns = [
   // --- INFO GROUP ---
   columnHelper.group({
+    id: 'info',
     header: "Info",
+    enableSorting: false,
     columns: [
       columnHelper.accessor('id', {
         id: 'mainId',
         header: 'Name',
+        enableSorting: false,
         cell: ({ row, getValue }) => {
           // Display value ONLY for parent rows (depth 0)
           return row.depth === 0 ? <div className="font-semibold">{getValue()}</div> : null;
@@ -35,6 +38,7 @@ const mainTableColumns = [
       columnHelper.accessor('price', {
         id: 'mainPrice',
         header: 'Price',
+        enableSorting: false,
         cell: (info) => {
           // Display value ONLY for parent rows (depth 0)
           return info.row.depth === 0 ? `$${info.getValue()}` : null;
@@ -43,6 +47,7 @@ const mainTableColumns = [
       columnHelper.accessor('focusCost', {
         id: 'mainFocusCost',
         header: 'Focus Cost',
+        enableSorting: false,
         cell: ({ row, getValue }) => {
           // Display value ONLY for parent rows (depth 0)
           return row.depth === 0 ? <div className="font-semibold">{getValue()}</div> : null;
@@ -55,11 +60,13 @@ const mainTableColumns = [
   columnHelper.group({
     id: 'materials',
     header: 'Materials',
+    enableSorting: false,
     columns: [
       // 1. Material Name Column
       columnHelper.accessor('materialId', {
         id: 'materialId',
         header: 'Name',
+        enableSorting: false,
         meta: {
           // This function is called for every cell in this column
           tdClassName: ({ row }) => {
@@ -87,6 +94,7 @@ const mainTableColumns = [
       columnHelper.accessor('quantity', {
         id: 'quantity',
         header: 'Quantity',
+        enableSorting: false,
         cell: ({ row, getValue }) => {
           if (row.depth === 0 || row.original.isMaterial) {
             return getValue();
@@ -94,10 +102,11 @@ const mainTableColumns = [
           return null;
         },
       }),
-      
+
       columnHelper.accessor('ingredientCost', {
         id: 'materialPrice',
         header: 'Price',
+        enableSorting: false,
         meta: {
           tdClassName: ({ row }) => {
             return (row.original.method == 'buy') ? row.original.method : ''
@@ -114,6 +123,7 @@ const mainTableColumns = [
       columnHelper.accessor('totalFocusCost', {
         id: 'materialFocusCost',
         header: 'Focus',
+        enableSorting: false,
         meta: {
           tdClassName: ({ row }) => {
             return (row.original.method == 'craft') ? row.original.method : ''
@@ -134,6 +144,7 @@ const mainTableColumns = [
     columns: [
       columnHelper.accessor('profitPerFocus', {
         header: 'Profit/Focus',
+        enableSorting: true,
         cell: ({ row, getValue }) => {
           // Display value ONLY for parent rows (depth 0)
           return row.depth === 0 ? <div className="font-mono">${getValue()?.toFixed(2)}</div> : null;
@@ -144,7 +155,7 @@ const mainTableColumns = [
 ];
 
 export default function MainTable() {
-  const ctx = React.useContext(MainTableContext);
+  const ctx = useContext(MainTableContext);
 
   if (!ctx) {
     return <div>Loading...</div>;
@@ -165,7 +176,7 @@ export default function MainTable() {
     getSubRows: (row) => row.subRows,
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
-
+    getSortedRowModel: getSortedRowModel(),
     state: { expanded: true },
     onExpandedChange: () => { },
     autoResetExpanded: false,
@@ -187,6 +198,15 @@ export default function MainTable() {
                 <th
                   key={header.id}
                   colSpan={header.colSpan}
+                  onClick={header.column.getToggleSortingHandler()}
+                  className={
+                    // Use header.column.getIsSorted() to check the state
+                    header.column.getIsSorted() === 'asc'
+                      ? styles.sortAscending // Styled state 1
+                      : header.column.getIsSorted() === 'desc'
+                        ? styles.sortDescending // Styled state 2
+                        : undefined // No styling applied for the unsorted (3rd) state
+                  }
                 >
                   {header.isPlaceholder
                     ? null

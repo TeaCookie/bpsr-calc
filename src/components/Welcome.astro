@@ -2,19 +2,16 @@
 import background from '../assets/background.svg';
 import MainTableShell from '../utils/mainTableShell.tsx';
 import { getAllMaterials } from '../utils/materialController';
+import AdminForm from './adminForm';
 
 const initialRecipes = await getAllMaterials();
 ---
-<!-- <div>SERVER initialRecipes.length: {initialRecipes?.length ?? 0}</div> -->
-
 <div id="container">
 	<img id="background" src={background.src} alt="" fetchpriority="high" />
 	<main>
 		<section id="hero">
-			<!-- <MainTableProvider client:load initialData={initialRecipes}>
-        <MainTable />
-      </MainTableProvider> -->
       <MainTableShell client:load initialData={initialRecipes} />
+      <!-- <AdminForm client:load> -->
 		</section>
 	</main>
 </div>
