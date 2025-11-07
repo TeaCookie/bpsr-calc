@@ -53,7 +53,6 @@ export function normalizeData(
       price: item.price,
       focusCost: item.focusCost,
       subRows: subRows,
-      method: itemCache?.method,
       profitPerFocus: itemCache?.profitPerFocus
     } as MaterialDisplay;
   }
@@ -217,7 +216,7 @@ export function findFocusEquilibrium(
     if (material.focusCost > 0) {
       finalPPF = profit / material.focusCost;
     }
-
+    console.log("for: ", material.id, cachedInfo)
     // Overwrite the cached object with the final PPF
     convergedCostCache.set(material.id, {
       ...cachedInfo,
