@@ -30,18 +30,17 @@ const mainTableColumns = [
         id: 'mainId',
         header: 'Name',
         enableSorting: false,
-        cell: ({ row, getValue }) => {
-          // Display value ONLY for parent rows (depth 0)
-          return row.depth === 0 ? <div className="font-semibold">{getValue()}</div> : null;
+        cell: ({getValue }) => {
+          return getValue();
         },
       }),
       columnHelper.accessor('price', {
         id: 'mainPrice',
         header: 'Price',
         enableSorting: false,
-        cell: (info) => {
-          // Display value ONLY for parent rows (depth 0)
-          return info.row.depth === 0 ? `$${info.getValue()}` : null;
+        cell: ({getValue}) => {
+          const value = getValue();
+          return value == null ? '' : `$${value}`;
         },
       }),
       columnHelper.accessor('focusCost', {
@@ -113,10 +112,9 @@ const mainTableColumns = [
           },
         },
         cell: ({ row, getValue }) => {
-          if (row.depth === 0 || row.original.isMaterial) {
-            return `$${getValue()?.toFixed(0)}`;
-          }
-          return null;
+          const value = getValue()
+          return value == null ? '' : `$${value.toFixed(0)}`;
+          
         }
       }),
 

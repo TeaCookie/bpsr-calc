@@ -7,6 +7,7 @@ export interface Material {
   }[];
   yield: number | {chance: number, quantity: number}[];
   focusCost: number;
+  extra?: {qualityOutput: string, price: number, chance: number}[];
 }
 
 export interface RecipeItem extends Material {

@@ -8,6 +8,8 @@ export interface ComputedRecipeInfo {
   focusCost: number;
   method: "buy" | "craft" | "error"
   profitPerFocus?: number;
+  expectedRevenue?: number;
+  baseFocusPerUnit?: number;
 }
 
 export function normalizeData(
@@ -20,33 +22,54 @@ export function normalizeData(
     let subRows: MaterialDisplay[] = [];
     // Array normalization
     const rowData = (item.recipe && item.recipe.length > 0) ? item.recipe : [{ materialId: item.id, quantity: 1 }]
-    subRows = rowData.map((r) => {
-      const subCache = focusCache.get(r.materialId);
-      return {
-        id: `${item.id}-${r.materialId}`,
-        // price: subCache?.effectiveCostPerUnit ?? 0,
-        // focusCost: subCache?.focusCost,
-        materialId: r.materialId,
-        quantity: r.quantity,
-        method: subCache?.method || 'error',
-        ingredientCost: subCache?.effectiveCostPerUnit,
-        totalFocusCost: subCache?.focusCost,
-        // profitPerFocus: subCache?.profitPerFocus,
-        isMaterial: true,
-      } as MaterialDisplay;
-    });
-    // // inject sums into subRow display
-    if (item.recipe && item.recipe?.length > 0){
+    const maxRows = Math.max(rowData.length, (item.extra?.length || 0) + 1)
+    for (let i = 0; i< maxRows; i++){
+      const ingredient = rowData[i]
+      const extraOutput = item.extra?.[i - 1]
+      const subCache = focusCache.get(rowData[i]?.materialId);
+
       subRows.push({
-        id: `${item.id}-sums`,
-        ingredientCost: itemCache?.ingredientCost,
-        totalFocusCost: itemCache?.focusCost,
-        isMaterial: true
+        id: extraOutput?.qualityOutput,
+        price: extraOutput?.price,
+        materialId: ingredient?.materialId,
+        quantity: ingredient?.quantity,
+        method: subCache?.method,
+        ingredientCost: subCache?.effectiveCostPerUnit,
+        totalFocusCost: subCache?.baseFocusPerUnit,
+        isMaterial: true,
       }as MaterialDisplay)
+    }
+    // subRows = rowData.map((r) => {
+    //   const subCache = focusCache.get(r.materialId);
+    //   return {
+    //     id: `${item.id}-${r.materialId}`,
+    //     // price: subCache?.effectiveCostPerUnit ?? 0,
+    //     // focusCost: subCache?.focusCost,
+    //     materialId: r.materialId,
+    //     quantity: r.quantity,
+    //     method: subCache?.method || 'error',
+    //     ingredientCost: subCache?.effectiveCostPerUnit,
+    //     totalFocusCost: subCache?.focusCost,
+    //     // profitPerFocus: subCache?.profitPerFocus,
+    //     isMaterial: true,
+    //   } as MaterialDisplay;
+    // });
+    // // inject sums into subRow display
+    if (item.recipe && item.recipe?.length > 0) { 
+      const totalFocusCostForSum = itemCache?.focusCost != null 
+          ? itemCache.focusCost - item.focusCost 
+          : undefined;
+      subRows.push({
+        // id: `${item.id}-sums`,
+        price: itemCache?.expectedRevenue?.toFixed(2),
+        ingredientCost: itemCache?.ingredientCost,
+        totalFocusCost: totalFocusCostForSum,
+        isMaterial: true
+      } as MaterialDisplay)
     }
 
     const parentData = subRows.shift()
-    
+    // console.log("For: ", item.id, subRows)
     return {
       ...parentData,
       id: item.id,
@@ -110,6 +133,7 @@ function getEffectiveCost(
   let effectiveCostPerUnit = 0;
   let ingredientCost = 0;
   let focusCost = 0;
+  let totalFocusCost = material.focusCost;
   let method: "buy" | "craft" | "error" = "error";
 
   if (material.recipe && material.recipe.length > 0) {
@@ -121,10 +145,14 @@ function getEffectiveCost(
         cache,
       );
       ingredientCost += ing.effectiveCostPerUnit * ingredient.quantity;
-      focusCost += ing.focusCost * ingredient.quantity;
+      // focusCost += ing.focusCost * ingredient.quantity
+      if (ing.method === "craft"){
+        const focusCostPerUnit = ing.baseFocusPerUnit || 0; 
+        totalFocusCost += focusCostPerUnit * ingredient.quantity; 
+      }
     }
   }
-  const gatherCostPerUnit = (ingredientCost + material.focusCost * focusPrice) / expectedYield;
+  const gatherCostPerUnit = (ingredientCost + totalFocusCost * focusPrice) / expectedYield;
   // console.log(`Material ${materialId}: gatherCostPerUnit=${gatherCostPerUnit.toFixed(2)}, marketPrice=${material.price.toFixed(2)}`);
   if (gatherCostPerUnit < material.price) {
     // console.log(`Material ${materialId}: gatherCostPerUnit=${gatherCostPerUnit.toFixed(2)}, marketPrice=${material.price.toFixed(2)}`);
@@ -138,12 +166,16 @@ function getEffectiveCost(
     ingredientCost = material.price;
     focusCost = material.focusCost / expectedYield;
   }
+
+  let baseFocusPerUnit = totalFocusCost / expectedYield;
+  
   const result: ComputedRecipeInfo = {
     expectedYield,
     ingredientCost,
     effectiveCostPerUnit,
     method,
-    focusCost: focusCost,
+    focusCost: totalFocusCost,
+    baseFocusPerUnit: baseFocusPerUnit,
   };
   // console.log(`Computed cost for ${materialId}:`, result);
   cache.set(materialId, result);
@@ -197,7 +229,7 @@ export function findFocusEquilibrium(
     }
     // Update our guess and loop again
     const delta = maxPPF - currentFocusPrice;
-        currentFocusPrice = currentFocusPrice + dampingFactor * delta;
+    currentFocusPrice = currentFocusPrice + dampingFactor * delta;
     iteration++;
   }
   if (!convergedCostCache) {
@@ -208,19 +240,28 @@ export function findFocusEquilibrium(
     const cachedInfo = convergedCostCache.get(material.id);
     if (!cachedInfo) continue;
 
-    const expectedYield = resolveYield(material.yield);
-    const revenue = material.price * 0.95 * expectedYield;
+    // Handle new multi-output recipes
+    let expectedBaseValue = material.price
+    if (material.extra && material.extra.length > 0) {
+      for (const output of material.extra){
+        expectedBaseValue -= output.chance * material.price
+        expectedBaseValue += output.chance * output.price
+      }
+    }
+    const expectedYield = resolveYield(material.yield)
+    const revenue = expectedBaseValue * expectedYield * 0.95 
 
     const profit = revenue - cachedInfo.ingredientCost;
     let finalPPF = 0;
     if (material.focusCost > 0) {
       finalPPF = profit / material.focusCost;
     }
-    console.log("for: ", material.id, cachedInfo)
+    console.log("for: ", material.id, cachedInfo, finalPPF)
     // Overwrite the cached object with the final PPF
     convergedCostCache.set(material.id, {
       ...cachedInfo,
-      profitPerFocus: finalPPF
+      profitPerFocus: finalPPF,
+      expectedRevenue: revenue
     });
   }
 
