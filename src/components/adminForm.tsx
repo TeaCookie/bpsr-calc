@@ -3,13 +3,12 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import type { SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod';
 import { actions } from 'astro:actions';
-// ⚠️ Assuming 'z' import is available for use here (or imported from 'zod')
 import { z } from 'zod'; 
 
 // Import your existing types and schemas
 import type { MaterialFormInputs} from "../lib/actionTypes";
 // Import the clean MaterialSchema and YieldValues
-import { MaterialSchema, YieldValues } from "../lib/actionTypes"; 
+import { MaterialSchema, YieldValues, ExtraValues } from "../lib/actionTypes"; 
 
 import styles from './adminForm.module.css'
 
@@ -19,7 +18,8 @@ interface AdminFormState extends MaterialFormInputs {
     yieldType: 'single' | 'array';
     yieldSingle: number;
     // We use the exact structure of the array that Zod's YieldValues expects
-    yieldArray: z.infer<typeof YieldValues>[]; 
+    yieldArray: z.infer<typeof YieldValues>[];
+    extra: z.infer<typeof ExtraValues>[];
 }
 
 // 2. Define the Zod Schema that the RESOLVER will use. (Locally defined)
@@ -32,6 +32,7 @@ const AdminFormResolverSchema = MaterialSchema.extend({
     yieldType: z.literal('single').or(z.literal('array')),
     yieldSingle: z.number().positive("Yield quantity must be positive."),
     yieldArray: z.array(YieldValues),
+    extra: z.array(ExtraValues),
 });
 
 
@@ -61,6 +62,7 @@ const AdminForm: React.FC<AdminProps> = ({ initialData }) => {
             price: initialData?.price || 0.00,
             focusCost: initialData?.focusCost || 0,
             recipe: initialData?.recipe || [],
+            extra: initialData?.extra || [],
             
             // --- Initial Yield Setup for Form State ---
             yieldType: initialYieldIsArray ? 'array' : 'single',
@@ -86,6 +88,15 @@ const AdminForm: React.FC<AdminProps> = ({ initialData }) => {
         name: "yieldArray",
     });
 
+    const {
+      fields: extraFields,
+      append: appendExtra,
+      remove: removeExtra
+    } = useFieldArray({
+      control, 
+      name: "extra"
+    })
+
     const yieldMode = watch('yieldType', initialYieldIsArray ? 'array' : 'single');
 
     // --- Submission Handler ---
@@ -106,6 +117,10 @@ const AdminForm: React.FC<AdminProps> = ({ initialData }) => {
         // Filter recipe data (as before)
         const recipeData = data.recipe?.filter(r => r.materialId && r.quantity);
 
+        let finalExtra: MaterialFormInputs['extra'];
+
+        finalExtra = data.extra?.filter(e => e.qualityOutput && e.chance && e.price !== undefined) || [];
+
         // 2. Construct the final payload for the Astro Action
         // NOTE: This now correctly matches the clean MaterialFormInputs type
         const payload: MaterialFormInputs = { 
@@ -114,6 +129,7 @@ const AdminForm: React.FC<AdminProps> = ({ initialData }) => {
             focusCost: data.focusCost,
             recipe: recipeData,
             yield: finalYield, 
+            extra: finalExtra
         };
 
         try {
@@ -276,6 +292,68 @@ const AdminForm: React.FC<AdminProps> = ({ initialData }) => {
                     </button>
                 </div>
             )}
+
+            {/* --- EXTRA OUTPUTS (Dynamic Array) --- */}
+            <h3 className={styles.sectionTitle}>Extra Outputs (Multi-Outputs)</h3>
+            <div className={styles.recipeList}>
+                {extraFields.map((field, index) => (
+                    <div key={field.id} className={styles.recipeRow}>
+                        {/* Chance */}
+                        <div className={styles.recipeInputContainer}>
+                            <label className={styles.recipeLabel}>Chance (0.0-1.0)</label>
+                            <input 
+                                type="number" 
+                                step="0.0001"
+                                {...register(`extra.${index}.chance`, { valueAsNumber: true })}
+                                className={styles.recipeInputField}
+                            />
+                            {errors.extra?.[index]?.chance && 
+                                <p className={styles.errorText}>{errors.extra[index].chance.message}</p>}
+                        </div>
+
+                        {/* Output ID */}
+                        <div className={styles.recipeInputContainer}>
+                            <label className={styles.recipeLabel}>Output Material ID</label>
+                            <input 
+                                {...register(`extra.${index}.qualityOutput`)}
+                                className={styles.recipeInputField}
+                            />
+                            {errors.extra?.[index]?.qualityOutput && 
+                                <p className={styles.errorText}>{errors.extra[index].qualityOutput.message}</p>}
+                        </div>
+
+                        {/* Price */}
+                        <div className={styles.recipeInputContainer}>
+                            <label className={styles.recipeLabel}>Price ($)</label>
+                            <input 
+                                type="number" 
+                                step="0.01"
+                                {...register(`extra.${index}.price`, { valueAsNumber: true })}
+                                className={styles.recipeInputField}
+                            />
+                            {errors.extra?.[index]?.price && 
+                                <p className={styles.errorText}>{errors.extra[index].price.message}</p>}
+                        </div>
+                        
+                        {/* Remove Button */}
+                        <button 
+                            type="button" 
+                            onClick={() => removeExtra(index)} 
+                            className={styles.removeButton}
+                        >
+                            Remove
+                        </button>
+                    </div>
+                ))}
+                
+                <button 
+                    type="button" 
+                    onClick={() => appendExtra({ chance: 1, qualityOutput: '', price: 0 })} 
+                    className={styles.addButton}
+                >
+                    + Add Extra Output
+                </button>
+            </div>
 
             {/* --- RECIPE INGREDIENTS (Dynamic Array) --- */}
             <h3 className={styles.sectionTitle}>Recipe Ingredients (Optional)</h3>

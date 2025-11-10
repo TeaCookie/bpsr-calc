@@ -26,6 +26,7 @@ export const server = {
           recipe: data.recipe,
           yield: data.yield,
           focusCost: data.focusCost,
+          extra: data.extra
         }])
         .select();
 
